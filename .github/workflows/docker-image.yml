@@ -24,6 +24,6 @@ jobs:
 
     - name: Build and Push Docker Image
       run: |
-        docker buildx build --platform linux/amd64,linux/arm64 -t ventana1901/ricky:v1 .
+        docker buildx build -t ventana1901/ricky:v1 .
         docker push ventana1901/ricky:v1
       working-directory: .  # Esto asegura que el Dockerfile se encuentre en el contexto de construcción
