@@ -1,71 +1,99 @@
-# Getting Started with Create React App
+# Proyecto CI-GitHub-2024-1
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
-hi
+Este proyecto contiene un código fuente de una aplicación web que será contenerizada utilizando Docker. A continuación se describe el proceso para contenerizar la aplicación y automatizarlo con GitHub Actions.
 
-## Available Scripts
+## Estructura del Proyecto
 
-In the project directory, you can run:
+El proyecto tiene la siguiente estructura de archivos y directorios:
 
-### `npm start`
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+```
+├── Dockerfile
+├── README.md
+├── images/
+├── node_modules/
+├── package-lock.json
+├── package.json
+├── public/
+├── src/
+└── yarn.lock
+```
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
 
-### `npm test`
+## Contenerización del Proyecto
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Se creará un archivo Dockerfile en el directorio del proyecto para contenerizar la aplicación. El Dockerfile contendrá las siguientes instrucciones:
 
-### `npm run build`
+```Dockerfile
+# Utiliza la imagen base de Node.js
+FROM node:latest
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+# Establece el directorio de trabajo dentro del contenedor
+WORKDIR /app
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+# Copia los archivos de tu proyecto al directorio de trabajo del contenedor
+COPY . /app/
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+# Instala las dependencias del proyecto
+RUN npm install
 
-### `npm run eject`
+# Expone el puerto 3000 para acceder a la aplicación desde fuera del contenedor
+EXPOSE 3000
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+# Define el comando para iniciar la aplicación
+CMD ["npm", "start"]
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+## Automatización con GitHub Actions
 
-## Learn More
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+Se utilizará GitHub Actions para automatizar el proceso de contenerización y despliegue de la aplicación. A continuación se muestra el archivo YAML de configuración de GitHub Actions:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+name: Docker Image CI
 
-### Code Splitting
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+jobs:
 
-### Analyzing the Bundle Size
+  build:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+    runs-on: ubuntu-latest
 
-### Making a Progressive Web App
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v2 # Specify the version of the checkout action
+    
+    - name: Build the Docker image
+      run: docker build . --file Dockerfile -t ventana1901/rick-and-morty:${{ github.run_number }}
+      # Use github.run_number to tag the Docker image with a unique identifier
+    
+    - name: Docker Login
+      uses: docker/login-action@v2
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+    - name: Push into Docker-hub
+      run: docker push ventana1901/rick-and-morty:${{ github.run_number }}
+      # Use github.run_number to reference the same tag used during build
+```
 
-### Advanced Configuration
+Este archivo YAML configura un flujo de trabajo de GitHub Actions que se activa en cada push o pull request en la rama main. Realiza los siguientes pasos:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- Realiza el checkout del código fuente.
+- Construye la imagen Docker utilizando el Dockerfile presente en el directorio del proyecto.
+- Inicia sesión en Docker Hub utilizando las credenciales proporcionadas como secretos en el repositorio.
+- Sube la imagen Docker construida a Docker Hub etiquetándola con un identificador único generado por GitHub Actions.
 
-### Deployment
+Con estos pasos, la aplicación se conteneriza automáticamente y la imagen se empuja a Docker Hub listo para su despliegue
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+Autor
 
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [Daniel Ramirez](https://github.com/DanielRamirez1901)
